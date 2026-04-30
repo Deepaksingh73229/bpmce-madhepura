@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import studentRoutes from './modules/student/routes/student.routes';
+import userRoutes from './modules/user/routes/user.routes';
 import { errorHandler } from './middlewares/error.middleware';
 
 const app: Application = express();
@@ -21,9 +22,10 @@ app.get('/health', (_req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/v1/students', studentRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // 404 Handler
-app.use(/.+/, (_req: Request, res: Response) => {
+app.use('*', (_req: Request, res: Response) => {
     res.status(404).json({
         success: false,
         message: 'Route not found',

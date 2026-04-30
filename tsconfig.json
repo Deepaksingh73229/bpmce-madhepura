@@ -18,13 +18,13 @@
         "strictFunctionTypes": true,
         "noImplicitAny": true,
         "noUnusedLocals": true,
-        "noUnusedParameters": true,
+        "noUnusedParameters": false,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true
     },
     "include": [
         "**/*.ts"
-    ],
+, "config/db.config.js"    ],
     "exclude": [
         "node_modules",
         "dist"

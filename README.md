@@ -1,14 +1,16 @@
 ﻿````markdown
 # 🏛️ BPMCE CampusCore
 
-> A centralized and scalable campus management platform designed to power hostel, academic, student, and administrative systems through a unified API architecture.
+A centralized and scalable campus management platform designed to power hostel, academic, student, and administrative systems through a unified API architecture.
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Node.js-20+-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/Express.js-Backend-black?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/MongoDB-Database-green?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/JWT-Authentication-orange?style=for-the-badge" />
-  <img src="https://img.shields.io/badge/RBAC-Authorization-blue?style=for-the-badge" />
+
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![RBAC](https://img.shields.io/badge/RBAC-System-blue?style=for-the-badge)
+
 </p>
 
 ---

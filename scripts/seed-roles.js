@@ -1,81 +1,163 @@
 import mongoose from 'mongoose';
-import { Role } from '../models/role.model.js';
+import bcrypt from 'bcryptjs';
+
 import env from '../config/env.js';
 
-const seedRoles = async () => {
-    try {
-        await mongoose.connect(env.MONGODB_URI);
-        console.log('✅ Connected to MongoDB');
+import { Role } from '../models/role.model.js';
+import { User } from '../models/user.model.js';
 
-        // ⚠️ Optional safety: prevent accidental production wipe
+const connectDB = async () => {
+    await mongoose.connect(env.MONGODB_URI);
+
+    console.log('✅ Connected to MongoDB');
+};
+
+const clearDatabase = async () => {
+    await Role.deleteMany({});
+    await User.deleteMany({});
+
+    console.log('🗑️ Existing data cleared');
+};
+
+const seedRoles = async () => {
+    console.log('\n🌱 Seeding roles...');
+
+    const admin = await Role.create({
+        name: 'admin',
+        permissions: [
+            'user.create',
+            'user.read',
+            'user.update',
+            'user.delete',
+
+            'student.create',
+            'student.read',
+            'student.update',
+            'student.delete',
+
+            'student.manage',
+            'hostel.manage',
+            'academic.manage',
+        ],
+    });
+
+    const staff = await Role.create({
+        name: 'staff',
+        permissions: ['user.read', 'student.read'],
+    });
+
+    const faculty = await Role.create({
+        name: 'faculty',
+        permissions: ['student.read', 'academic.manage'],
+    });
+
+    const student = await Role.create({
+        name: 'student',
+        permissions: ['student.read'],
+    });
+
+    const officeAssistant = await Role.create({
+        name: 'office_assistant',
+        parentRole: staff._id,
+        permissions: ['student.create', 'student.update'],
+    });
+
+    const hostelSuperintendent = await Role.create({
+        name: 'hostel_superintendent',
+        parentRole: faculty._id,
+        permissions: ['hostel.manage', 'student.read'],
+    });
+
+    console.log('✅ Roles seeded successfully');
+
+    return {
+        admin,
+        staff,
+        faculty,
+        student,
+        officeAssistant,
+        hostelSuperintendent,
+    };
+};
+
+const seedUsers = async (roles) => {
+    console.log('\n🌱 Seeding users...');
+
+    const adminUser = await User.create({
+        name: 'Super Admin',
+        email: 'admin@college.com',
+        password: 'Admin@123',
+        roles: [roles.admin._id],
+    });
+
+    const superintendentUser = await User.create({
+        name: 'Hostel Superintendent',
+        email: 'superintendent@college.com',
+        password: 'Super@123',
+        roles: [roles.hostelSuperintendent._id],
+    });
+
+    const studentUser = await User.create({
+        name: 'Deepak Kumar',
+        email: 'student@college.com',
+        password: 'Student@123',
+        roles: [roles.student._id],
+    });
+
+    console.log('✅ Users seeded successfully');
+
+    console.log('\n👤 Sample Accounts');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Admin');
+    console.log('Email: admin@college.com');
+    console.log('Password: Admin@123');
+
+    console.log('\nSuperintendent');
+    console.log('Email: superintendent@college.com');
+    console.log('Password: Super@123');
+
+    console.log('\nStudent');
+    console.log('Email: student@college.com');
+    console.log('Password: Student@123');
+
+    return {
+        adminUser,
+        superintendentUser,
+        studentUser,
+    };
+};
+
+const seed = async () => {
+    try {
         if (env.NODE_ENV === 'production') {
-            console.warn('⚠️ Seeding in production environment');
+            console.warn(
+                '⚠️ WARNING: You are running seed in production environment'
+            );
         }
 
-        // Clear existing roles
-        await Role.deleteMany({});
-        console.log('🗑️ Cleared existing roles');
+        await connectDB();
 
-        // Create base roles
-        const admin = await Role.create({
-            name: 'admin',
-            permissions: [
-                'user.create',
-                'user.read',
-                'user.update',
-                'user.delete',
-                'student.create',
-                'student.read',
-                'student.update',
-                'student.delete',
-                'student.manage',
-                'hostel.manage',
-                'academic.manage',
-            ],
-        });
+        await clearDatabase();
 
-        const staff = await Role.create({
-            name: 'staff',
-            permissions: ['user.read', 'student.read'],
-        });
+        const roles = await seedRoles();
 
-        const faculty = await Role.create({
-            name: 'faculty',
-            permissions: ['student.read', 'academic.manage'],
-        });
+        await seedUsers(roles);
 
-        const student = await Role.create({
-            name: 'student',
-            permissions: ['student.read'],
-        });
+        console.log('\n🎉 Database seeded successfully');
 
-        // Create hierarchical roles
-        await Role.create({
-            name: 'office_assistant',
-            parentRole: staff._id,
-            permissions: ['student.create', 'student.update'],
-        });
+        await mongoose.disconnect();
 
-        await Role.create({
-            name: 'hostel_superintendent',
-            parentRole: faculty._id,
-            permissions: ['hostel.manage', 'student.read'],
-        });
-
-        console.log('\n✅ Roles seeded successfully');
-        console.log('📋 Created roles:');
-        console.log('   - admin');
-        console.log('   - staff');
-        console.log('   - faculty');
-        console.log('   - student');
-        console.log('   - office_assistant (child of staff)');
-        console.log('   - hostel_superintendent (child of faculty)');
+        console.log('🔌 MongoDB disconnected');
 
         process.exit(0);
     } catch (error) {
-        console.error('❌ Error seeding roles:', error);
+        console.error('\n❌ Seeding failed');
+        console.error(error);
+
+        await mongoose.disconnect();
+
         process.exit(1);
     }
 };
 
-seedRoles();
+seed();

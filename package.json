@@ -6,6 +6,7 @@
   "main": "server.js",
   "private": true,
   "scripts": {
+    "seed": "node scripts/seed-roles.js",
     "dev": "nodemon server.js",
     "start": "node server.js",
     "lint": "echo \"Add ESLint later\"",

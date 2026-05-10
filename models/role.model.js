@@ -28,38 +28,58 @@ const roleSchema = new Schema(
     }
 );
 
-// Prevent circular hierarchy
-roleSchema.pre('save', async function (next) {
-    try {
-        if (this.parentRole) {
-            const checkCircular = async (roleId, visited = new Set()) => {
-                const roleIdStr = roleId.toString();
+/**
+ * Prevent circular role hierarchy
+ *
+ * Example invalid hierarchy:
+ * Admin -> Teacher
+ * Teacher -> Admin
+ */
+roleSchema.pre('save', async function () {
 
-                if (visited.has(roleIdStr)) {
-                    return true;
-                }
+    // Skip if no parent role
+    if (!this.parentRole) {
+        return;
+    }
 
-                visited.add(roleIdStr);
+    // Prevent self-parenting
+    if (this.parentRole.toString() === this._id.toString()) {
+        throw new Error('Role cannot be parent of itself');
+    }
 
-                const role = await mongoose.model('Role').findById(roleId);
+    /**
+     * Recursively check hierarchy
+     */
+    const checkCircularHierarchy = async (roleId) => {
 
-                if (role && role.parentRole) {
-                    return checkCircular(role.parentRole, visited);
-                }
+        const role = await mongoose
+            .model('Role')
+            .findById(roleId);
 
-                return false;
-            };
-
-            const isCircular = await checkCircular(this.parentRole);
-
-            if (isCircular) {
-                throw new Error('Circular role hierarchy detected');
-            }
+        // Role not found
+        if (!role) {
+            return false;
         }
 
-        next();
-    } catch (err) {
-        next(err);
+        // Circular detected
+        if (role._id.toString() === this._id.toString()) {
+            return true;
+        }
+
+        // Continue checking upward hierarchy
+        if (role.parentRole) {
+            return checkCircularHierarchy(role.parentRole);
+        }
+
+        return false;
+    };
+
+    const isCircular = await checkCircularHierarchy(
+        this.parentRole
+    );
+
+    if (isCircular) {
+        throw new Error('Circular role hierarchy detected');
     }
 });
 

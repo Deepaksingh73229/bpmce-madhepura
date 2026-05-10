@@ -27,7 +27,8 @@ const studentSchema = new Schema(
         password: {
             type: String,
             required: [true, 'Password is required'],
-            minlength: 6,
+            minlength: [6, 'Password must be at least 6 characters'],
+            select: false, // Don't return password by default
         },
 
         rollNumber: {
@@ -87,6 +88,30 @@ const studentSchema = new Schema(
         timestamps: true,
     }
 );
+
+studentSchema.pre('save', async function (next) {
+    // only run on user creation
+    if(this.isNew){
+        if(!this.rollNumber && !this.dateOfBirth){
+            return next(
+                new Error('Roll No and DOB are required!')
+            )
+        }
+
+        // parse dob
+        const dob = new Date(this.dateOfBirth);
+
+        const day = String(dob.getDate()).padStart(2, '0');
+        const month = String(dob.getMonth() + 1).padStart(2, '0');
+        const year = dob.getFullYear();
+
+        const formattedDOB = `${day}${month}${year}`;
+
+        this.password = `${this.rollNumber}@${formattedDOB}`
+    }
+
+    next()
+})
 
 // Indexes for performance
 studentSchema.index({ isActive: 1 });

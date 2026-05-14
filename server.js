@@ -15,20 +15,25 @@ app.get('/health', (_req, res) => {
 });
 
 const startServer = async () => {
-    try {
-        // Connect to Database
-        await connect();
+    // Start HTTP server FIRST — always reachable regardless of DB state
+    const server = app.listen(env.PORT, () => {
+        console.log(`🚀 Server running on port ${env.PORT}`);
+        console.log(`📍 Environment: ${env.NODE_ENV}`);
+        console.log(`🔗 Health Check: http://localhost:${env.PORT}/health`);
+        console.log(`🎓 Students API: http://localhost:${env.PORT}/api/v1/students`);
+    });
 
-        // Start Server
-        app.listen(env.PORT, () => {
-            console.log(`🚀 Server running on port ${env.PORT}`);
-            console.log(`📍 Environment: ${env.NODE_ENV}`);
-            console.log(`🔗 Health Check: http://localhost:${env.PORT}/health`);
-            console.log(`🎓 Students API: http://localhost:${env.PORT}/api/v1/students`);
-        });
-    } catch (error) {
-        console.error('❌ Failed to start server:', error);
+    server.on('error', (error) => {
+        console.error('❌ HTTP server error:', error);
         process.exit(1);
+    });
+
+    // Connect to Database after server is up
+    try {
+        await connect();
+    } catch (error) {
+        console.error('❌ Failed to connect to database:', error);
+        // Server stays up — DB may reconnect; don't exit
     }
 };
 

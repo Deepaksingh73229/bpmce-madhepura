@@ -81,8 +81,7 @@ const connectWithRetry = async () => {
     const uri = process.env.MONGODB_URI;
 
     if (!uri) {
-        console.error('❌ MONGODB_URI is not defined');
-        process.exit(1);
+        throw new Error('MONGODB_URI is not defined in environment variables');
     }
 
     while (retryCount < MAX_RETRIES) {
@@ -102,8 +101,9 @@ const connectWithRetry = async () => {
             );
 
             if (retryCount >= MAX_RETRIES) {
-                console.error('💀 Max retries reached. Exiting...');
-                process.exit(1);
+                console.error('💀 Max retries reached. Server will stay up but DB is unavailable.');
+                retryCount = 0; // reset so future reconnect attempts can retry
+                throw new Error(`MongoDB connection failed after ${MAX_RETRIES} retries: ${error.message}`);
             }
 
             console.log(`⏳ Retrying in ${RETRY_DELAY_MS / 1000}s...`);

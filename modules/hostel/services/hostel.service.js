@@ -2,8 +2,8 @@ import { Hostel } from '../models/hostel.model.js';
 import { Floor } from '../models/floor.model.js';
 import { Room } from '../models/room.model.js';
 import { Bed } from '../models/bed.model.js';
-import { RoomAllocation } from '../models/allocation.model.js';
-import { Student } from '../../student/models/student.model.js';
+import { RoomAllocation } from '../models/roomAllocation.model.js';
+import { Student } from '../../../models/student.model.js';
 
 import { HostelUtils } from '../utils/hostel.utils.js';
 import { AppError } from '../../../middlewares/error.middleware.js';

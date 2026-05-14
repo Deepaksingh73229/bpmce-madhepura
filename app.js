@@ -4,6 +4,7 @@ import cors from 'cors';
 import studentRoutes from './modules/student/routes/student.routes.js';
 import userRoutes from './modules/user/routes/user.routes.js';
 import authRoutes from './modules/auth/routes/auth.routes.js';
+import hostelRoutes from './modules/hostel/routes/hostel.routes.js';
 
 import { errorHandler } from './middlewares/error.middleware.js';
 
@@ -27,6 +28,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/students', studentRoutes);
+app.use('/api/v1/hostels', hostelRoutes);
 
 // 404 Handler
 app.use('*', (_req, res) => {

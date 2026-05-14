@@ -11,11 +11,11 @@ export const createHostelSchema = z.object({
             errorMap: () => ({ message: 'Hostel type must be male or female' }),
         }),
 
-        address: z.string().optional(),
+        // address: z.string().optional(),
 
-        totalFloors: z.number().int().positive(),
+        // totalFloors: z.number().int().positive(),
 
-        capacity: z.number().int().positive(),
+        // capacity: z.number().int().positive(),
 
         staff: z
             .array(

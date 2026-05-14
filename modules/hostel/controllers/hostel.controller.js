@@ -56,6 +56,21 @@ export class HostelController {
         return ApiResponse.success(res, floor, 'Floor created successfully', 201);
     };
 
+    getFloorsByHostel = async (req, res) => {
+        const { hostelId } = req.params;
+
+        const floors = await this.service.getFloorsByHostel(
+            hostelId,
+            req.query
+        );
+
+        return ApiResponse.success(
+            res,
+            floors,
+            'Floors retrieved successfully'
+        );
+    };
+
     updateFloor = async (req, res) => {
         const { id } = req.params;
         const floor = await this.service.updateFloor(id, req.body);
@@ -71,6 +86,36 @@ export class HostelController {
         return ApiResponse.success(res, room, 'Room created successfully', 201);
     };
 
+    getRoomsByHostel = async (req, res) => {
+        const { hostelId } = req.params;
+
+        const rooms = await this.service.getRoomsByHostel(
+            hostelId,
+            req.query
+        );
+
+        return ApiResponse.success(
+            res,
+            rooms,
+            'Rooms retrieved successfully'
+        );
+    };
+
+    getRoomsByStatus = async (req, res) => {
+        const { hostelId, status } = req.params;
+
+        const rooms = await this.service.getRoomsByStatus(
+            hostelId,
+            status
+        );
+
+        return ApiResponse.success(
+            res,
+            rooms,
+            'Rooms retrieved successfully'
+        );
+    };
+
     updateRoom = async (req, res) => {
         const { id } = req.params;
         const room = await this.service.updateRoom(id, req.body);
@@ -84,6 +129,46 @@ export class HostelController {
     createBed = async (req, res) => {
         const bed = await this.service.createBed(req.body);
         return ApiResponse.success(res, bed, 'Bed created successfully', 201);
+    };
+
+    // ═══════════════════════════════════════════════
+    // STAFF BY HOSTEL
+    // ═══════════════════════════════════════════════
+    getStaffByHostel = async (req, res) => {
+        const { hostelId } = req.params;
+
+        const staff = await this.service.getStaffByHostel({
+            hostelId,
+            role: req.query.role,
+        });
+
+        return ApiResponse.success(
+            res,
+            staff,
+            'Staff retrieved successfully'
+        );
+    };
+
+    // ═══════════════════════════════════════════════
+    // STUDENTS BY HOSTEL
+    // ═══════════════════════════════════════════════
+    getStudentsByHostel = async (req, res) => {
+        const { hostelId } = req.params;
+
+        const students = await this.service.getStudentsByHostel({
+            hostelId,
+            floorId: req.query.floorId,
+            roomId: req.query.roomId,
+            batch: req.query.batch
+                ? parseInt(req.query.batch)
+                : undefined,
+        });
+
+        return ApiResponse.success(
+            res,
+            students,
+            'Students retrieved successfully'
+        );
     };
 
     // ─────────────────────────────────────────────

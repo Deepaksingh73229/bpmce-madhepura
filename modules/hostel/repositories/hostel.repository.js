@@ -2,7 +2,7 @@ import { Hostel } from '../models/hostel.model.js';
 import { Floor } from '../models/floor.model.js';
 import { Room } from '../models/room.model.js';
 import { Bed } from '../models/bed.model.js';
-import { RoomAllocation } from '../models/allocation.model.js';
+import { RoomAllocation } from '../models/roomAllocation.model.js';
 
 export class HostelRepository {
     // ─────────────────────────────────────────────
@@ -13,11 +13,12 @@ export class HostelRepository {
     }
 
     async findHostelById(id) {
-        return await Hostel.findById(id);
+        return await Hostel.findById(id).populate('staff.user', 'name email phone roles');
     }
 
     async findAllHostels(filters, skip, limit) {
         return await Hostel.find(filters)
+            .populate('staff.user', 'name email phone roles')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 });
@@ -31,7 +32,7 @@ export class HostelRepository {
         return await Hostel.findByIdAndUpdate(id, data, {
             new: true,
             runValidators: true,
-        });
+        }).populate('staff.user', 'name email phone roles');
     }
 
     async softDeleteHostel(id) {
@@ -50,15 +51,23 @@ export class HostelRepository {
     }
 
     async findFloorById(id) {
-        return await Floor.findById(id);
+        return await Floor.findById(id).populate('hostel', 'name hostelType');
+    }
+
+    async findFloorsByHostel(hostelId, filters) {
+        const query = { hostel: hostelId, ...filters };
+        return await Floor.find(query).sort({ floorNumber: 1 });
     }
 
     async updateFloor(id, data) {
-        return await Floor.findByIdAndUpdate(id, data, { new: true });
+        return await Floor.findByIdAndUpdate(id, data, {
+            new: true,
+            runValidators: true
+        });
     }
 
-    async findFloorsByHostel(hostelId) {
-        return await Floor.find({ hostel: hostelId }).sort({ floorNumber: 1 });
+    async countFloorsByHostel(hostelId) {
+        return await Floor.countDocuments({ hostel: hostelId });
     }
 
     // ─────────────────────────────────────────────
@@ -69,14 +78,31 @@ export class HostelRepository {
     }
 
     async findRoomById(id) {
-        return await Room.findById(id);
+        return await Room.findById(id)
+            .populate('hostel', 'name hostelType')
+            .populate('floor', 'floorNumber name');
     }
 
     async findRooms(filters, skip, limit) {
         return await Room.find(filters)
+            .populate('hostel', 'name hostelType')
+            .populate('floor', 'floorNumber name')
             .skip(skip)
             .limit(limit)
-            .sort({ createdAt: -1 });
+            .sort({ roomNumber: 1 });
+    }
+
+    async findRoomsByHostel(hostelId, filters) {
+        const query = { hostel: hostelId, ...filters };
+        return await Room.find(query)
+            .populate('floor', 'floorNumber name')
+            .sort({ roomNumber: 1 });
+    }
+
+    async findRoomsByStatus(hostelId, status) {
+        return await Room.find({ hostel: hostelId, status })
+            .populate('floor', 'floorNumber name')
+            .sort({ roomNumber: 1 });
     }
 
     async countRooms(filters) {
@@ -84,7 +110,12 @@ export class HostelRepository {
     }
 
     async updateRoom(id, data) {
-        return await Room.findByIdAndUpdate(id, data, { new: true });
+        return await Room.findByIdAndUpdate(id, data,
+            {
+                new: true,
+                runValidators: true,
+            }
+        );
     }
 
     // ─────────────────────────────────────────────
@@ -95,11 +126,11 @@ export class HostelRepository {
     }
 
     async findBedById(id) {
-        return await Bed.findById(id);
+        return await Bed.findById(id).populate('room');
     }
 
     async findBedsByRoom(roomId) {
-        return await Bed.find({ room: roomId });
+        return await Bed.find({ room: roomId }).sort({ bedNumber: 1 });
     }
 
     async updateBed(id, data) {
@@ -117,17 +148,42 @@ export class HostelRepository {
         return await RoomAllocation.findOne({
             student: studentId,
             status: 'active',
-        });
+        })
+            .populate('hostel', 'name')
+            .populate('room', 'roomNumber')
+            .populate('bed', 'bedNumber');
     }
 
-    async findAllocationById(id) {
-        return await RoomAllocation.findById(id);
+    async findAllocationsByHostel(hostelId) {
+        return await RoomAllocation.find({
+            hostel: hostelId,
+            status: 'active',
+        })
+            .populate('student', 'name email rollNumber batchYear')
+            .populate('room', 'roomNumber')
+            .populate('bed', 'bedNumber');
+    }
+
+    async findAllocationsByFloor(floorId) {
+        const rooms = await Room.find({ floor: floorId }).select('_id');
+        const roomIds = rooms.map((r) => r._id);
+
+        return await RoomAllocation.find({
+            room: { $in: roomIds },
+            status: 'active',
+        })
+            .populate('student', 'name email rollNumber batchYear')
+            .populate('room', 'roomNumber');
     }
 
     async updateAllocation(id, data) {
         return await RoomAllocation.findByIdAndUpdate(id, data, {
             new: true,
         });
+    }
+
+    async findAllocationById(id) {
+        return await RoomAllocation.findById(id);
     }
 
     async findAllocations(filters, skip, limit) {
@@ -137,7 +193,10 @@ export class HostelRepository {
             .sort({ createdAt: -1 });
     }
 
-    async countAllocations(filters) {
-        return await RoomAllocation.countDocuments(filters);
+    async countAllocationsByHostel(hostelId) {
+        return await RoomAllocation.countDocuments({
+            hostel: hostelId,
+            status: 'active',
+        });
     }
 }

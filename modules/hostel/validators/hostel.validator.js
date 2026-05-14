@@ -49,9 +49,7 @@ export const updateHostelSchema = z.object({
 export const createFloorSchema = z.object({
     body: z.object({
         hostel: z.string().min(1, 'Hostel ID is required'),
-
         floorNumber: z.number().int().nonnegative(),
-
         name: z.string().optional(),
     }),
 });
@@ -75,11 +73,8 @@ export const createRoomSchema = z.object({
     body: z.object({
         hostel: z.string().min(1, 'Hostel ID is required'),
         floor: z.string().min(1, 'Floor ID is required'),
-
         roomNumber: z.string().min(1, 'Room number is required').trim(),
-
         type: z.enum(['single', 'triple']),
-
         capacity: z.number().int().positive(),
     }),
 });
@@ -169,7 +164,8 @@ export const validate = (schema) => {
             req.params = data.params;
 
             next();
-        } catch (error) {
+        } 
+        catch (error) {
             next(error);
         }
     };

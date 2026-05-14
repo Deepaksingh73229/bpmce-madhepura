@@ -7,19 +7,29 @@ export class HostelUtils {
     static buildHostelFilters(query) {
         const filters = {};
 
-        // Active filter (default true)
-        filters.isActive =
-            query.isActive !== undefined ? query.isActive : true;
-
         if (query.hostelType) {
             filters.hostelType = query.hostelType;
         }
 
+        if (query.isActive !== undefined) {
+            filters.isActive = query.isActive;
+        }
+
         if (query.search) {
-            const safe = escapeRegex(query.search);
             filters.$or = [
-                { name: { $regex: safe, $options: 'i' } },
-                { address: { $regex: safe, $options: 'i' } },
+                {
+                    name: {
+                        $regex: query.search,
+                        $options: 'i',
+                    },
+                },
+
+                {
+                    address: {
+                        $regex: query.search,
+                        $options: 'i',
+                    },
+                },
             ];
         }
 
@@ -52,8 +62,14 @@ export class HostelUtils {
     // PAGINATION
     // ─────────────────────────────────────────────
     static getPaginationParams(page = 1, limit = 10) {
+        page = Number(page);
+        limit = Number(limit);
         const skip = (page - 1) * limit;
-        return { skip, limit };
+
+        return {
+            skip,
+            limit,
+        };
     }
 
     // ─────────────────────────────────────────────
@@ -117,6 +133,16 @@ export class HostelUtils {
                 return 1;
         }
     }
+
+    static sanitizeUserData(user) {
+        const data = user.toObject ? user.toObject() : user;
+
+        delete data.password;
+        delete data.refreshToken;
+        delete data.__v;
+
+        return data;
+    }
 }
 
 // ─────────────────────────────────────────────
@@ -125,3 +151,4 @@ export class HostelUtils {
 function escapeRegex(str = '') {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
+

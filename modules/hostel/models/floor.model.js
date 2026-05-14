@@ -5,16 +5,17 @@ const floorSchema = new Schema(
         hostel: {
             type: Schema.Types.ObjectId,
             ref: 'Hostel',
-            required: true,
+            required: [true, 'Hostel reference is required'],
         },
 
         floorNumber: {
             type: Number,
-            required: true,
+            required: [true, 'Floor number is required'],
         },
 
         name: {
-            type: String, // optional like "Ground", "First"
+            type: String,  // Ground, First, ....
+            trim: true,
         },
 
         isActive: {

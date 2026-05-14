@@ -5,12 +5,12 @@ const bedSchema = new Schema(
         room: {
             type: Schema.Types.ObjectId,
             ref: 'Room',
-            required: true,
+            required: [true, 'Room reference is required'],
         },
 
         bedNumber: {
-            type: String, // B1, B2, B3
-            required: true,
+            type: String,
+            required: [true, 'Bed number is required'],
         },
 
         isOccupied: {

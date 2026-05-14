@@ -5,25 +5,25 @@ const allocationSchema = new Schema(
         student: {
             type: Schema.Types.ObjectId,
             ref: 'Student',
-            required: true,
+            required: [true, 'Student reference is required'],
         },
 
         hostel: {
             type: Schema.Types.ObjectId,
             ref: 'Hostel',
-            required: true,
+            required: [true, 'Hostel reference is required'],
         },
 
         room: {
             type: Schema.Types.ObjectId,
             ref: 'Room',
-            required: true,
+            required: [true, 'Room reference is required'],
         },
 
         bed: {
             type: Schema.Types.ObjectId,
             ref: 'Bed',
-            required: true,
+            required: [true, 'Bed reference is required'],
         },
 
         fromDate: {

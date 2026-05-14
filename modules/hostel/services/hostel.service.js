@@ -1,60 +1,76 @@
-import { Hostel } from '../models/hostel.model.js';
-import { Floor } from '../models/floor.model.js';
-import { Room } from '../models/room.model.js';
-import { Bed } from '../models/bed.model.js';
-import { RoomAllocation } from '../models/roomAllocation.model.js';
+// import { Hostel } from '../models/hostel.model.js';
+// import { Floor } from '../models/floor.model.js';
+// import { Room } from '../models/room.model.js';
+// import { Bed } from '../models/bed.model.js';
+// import { RoomAllocation } from '../models/roomAllocation.model.js';
+
+import { User } from '../../../models/user.model.js';
 import { Student } from '../../../models/student.model.js';
 
 import { HostelUtils } from '../utils/hostel.utils.js';
 import { AppError } from '../../../middlewares/error.middleware.js';
+import { HostelRepository } from '../repositories/hostel.repository.js';
 
 export class HostelService {
+    constructor() {
+        this.repository = new HostelRepository();
+    }
+
     // ─────────────────────────────────────────────
     // HOSTEL
     // ─────────────────────────────────────────────
     async createHostel(data) {
-        return await Hostel.create(data);
+        return await this.repository.createHostel(data);
     }
 
     async getAllHostels(query) {
         const filters = HostelUtils.buildHostelFilters(query);
+
         const { skip, limit } = HostelUtils.getPaginationParams(
             query.page,
             query.limit
         );
 
         const [hostels, total] = await Promise.all([
-            Hostel.find(filters).skip(skip).limit(limit),
-            Hostel.countDocuments(filters),
+            this.repository.findAllHostels(filters, skip, limit),
+            this.repository.countHostels(filters),
         ]);
 
-        return { hostels, total, page: query.page, limit };
+        return {
+            hostels,
+            total,
+            page: query.page || 1,
+            limit
+        };
     }
 
     async getHostelById(id) {
-        const hostel = await Hostel.findById(id);
-        if (!hostel) throw new AppError('Hostel not found', 404);
+        const hostel = await this.repository.findHostelById(id);
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
         return hostel;
     }
 
     async updateHostel(id, data) {
-        const hostel = await Hostel.findByIdAndUpdate(id, data, {
-            new: true,
-            runValidators: true,
-        });
+        const hostel = await this.repository.updateHostel(id, data);
 
-        if (!hostel) throw new AppError('Hostel not found', 404);
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
         return hostel;
     }
 
     async deleteHostel(id) {
-        const hostel = await Hostel.findByIdAndUpdate(
-            id,
-            { isActive: false },
-            { new: true }
-        );
+        const hostel = await this.repository.softDeleteHostel(id);
 
-        if (!hostel) throw new AppError('Hostel not found', 404);
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
         return hostel;
     }
 
@@ -62,12 +78,50 @@ export class HostelService {
     // FLOOR
     // ─────────────────────────────────────────────
     async createFloor(data) {
-        return await Floor.create(data);
+        const hostel = await this.repository.findHostelById(
+            data.hostel
+        );
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        return await this.repository.createFloor(data);
+    }
+
+    async getFloorsByHostel(hostelId, query) {
+        const hostel = await this.repository.findHostelById(hostelId);
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        const filters = {};
+
+        if (query.batchAllocation) {
+            filters.batchAllocation = query.batchAllocation;
+        }
+
+        if (query.batch) {
+            return await this.repository.findFloorsByBatch(
+                hostelId,
+                query.batch
+            );
+        }
+
+        return await this.repository.findFloorsByHostel(
+            hostelId,
+            filters
+        );
     }
 
     async updateFloor(id, data) {
-        const floor = await Floor.findByIdAndUpdate(id, data, { new: true });
-        if (!floor) throw new AppError('Floor not found', 404);
+        const floor = await this.repository.updateFloor(id, data);
+
+        if (!floor) {
+            throw new AppError('Floor not found', 404);
+        }
+
         return floor;
     }
 
@@ -75,82 +129,294 @@ export class HostelService {
     // ROOM
     // ─────────────────────────────────────────────
     async createRoom(data) {
-        // auto set capacity from type
-        data.capacity = HostelUtils.getRoomCapacity(data.type);
+        const [hostel, floor] = await Promise.all([
+            this.repository.findHostelById(data.hostel),
+            this.repository.findFloorById(data.floor),
+        ]);
 
-        return await Room.create(data);
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        if (!floor) {
+            throw new AppError('Floor not found', 404);
+        }
+
+        const capacity = HostelUtils.getRoomCapacity(data.type);
+
+        return await this.repository.createRoom({
+            ...data,
+            capacity,
+        });
+    }
+
+    async getRoomsByHostel(hostelId, query) {
+        const hostel = await this.repository.findHostelById(hostelId);
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        const filters = {};
+
+        if (query.status) {
+            filters.status = query.status;
+        }
+
+        if (query.type) {
+            filters.type = query.type;
+        }
+
+        if (query.floorId) {
+            filters.floor = query.floorId;
+        }
+
+        if (query.availableOnly) {
+            filters.$expr = {
+                $lt: ['$occupiedBeds', '$capacity'],
+            };
+        }
+
+        return await this.repository.findRoomsByHostel(
+            hostelId,
+            filters
+        );
     }
 
     async updateRoom(id, data) {
-        const room = await Room.findByIdAndUpdate(id, data, { new: true });
-        if (!room) throw new AppError('Room not found', 404);
+        const room = await this.repository.updateRoom(id, data);
+
+        if (!room) {
+            throw new AppError('Room not found', 404);
+        }
+
         return room;
+    }
+
+    async getRoomsByStatus(hostelId, status) {
+        const hostel = await this.repository.findHostelById(
+            hostelId
+        );
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        return await this.repository.findRoomsByStatus(
+            hostelId,
+            status
+        );
     }
 
     // ─────────────────────────────────────────────
     // BED
     // ─────────────────────────────────────────────
     async createBed(data) {
-        return await Bed.create(data);
+        const room = await this.repository.findRoomById(data.room);
+
+        if (!room) {
+            throw new AppError('Room not found', 404);
+        }
+
+        return await this.repository.createBed(data);
     }
+
+    // ═══════════════════════════════════════════════
+    // STAFF DETAILS
+    // ═══════════════════════════════════════════════
+    async getStaffByHostel(query) {
+        const hostel = await this.repository.findHostelById(
+            query.hostelId
+        );
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        let staff = hostel.staff;
+
+        if (query.role) {
+            staff = staff.filter(
+                (s) => s.role === query.role
+            );
+        }
+
+        const staffDetails = await Promise.all(
+            staff.map(async (s) => {
+                const user = await User.findById(
+                    s.user
+                ).populate('roles');
+
+                return {
+                    ...s.toObject(),
+                    user: user
+                        ? HostelUtils.sanitizeUserData(user)
+                        : null,
+                };
+            })
+        );
+
+        return staffDetails.filter((s) => s.user !== null);
+    }
+
+    // ═══════════════════════════════════════════════
+    // STUDENTS BY HOSTEL
+    // ═══════════════════════════════════════════════
+    async getStudentsByHostel(query) {
+        const hostel = await this.repository.findHostelById(
+            query.hostelId
+        );
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        let allocations =
+            await this.repository.findAllocationsByHostel(
+                query.hostelId
+            );
+
+        // Filter by floor
+        if (query.floorId) {
+            allocations =
+                await this.repository.findAllocationsByFloor(
+                    query.floorId
+                );
+        }
+
+        // Filter by batch
+        if (query.batch) {
+            allocations = allocations.filter((alloc) => {
+                return (
+                    alloc.student?.batchYear === query.batch
+                );
+            });
+        }
+
+        // Filter by room
+        if (query.roomId) {
+            allocations = allocations.filter((alloc) => {
+                return (
+                    alloc.room?._id.toString() ===
+                    query.roomId
+                );
+            });
+        }
+
+        return allocations.map((alloc) => ({
+            student: alloc.student,
+            room: alloc.room,
+            bed: alloc.bed,
+            fromDate: alloc.fromDate,
+            allocationId: alloc._id,
+        }));
+    }
+
 
     // ─────────────────────────────────────────────
     // 🔥 ROOM ALLOCATION (CORE)
     // ─────────────────────────────────────────────
-    async allocateRoom({ studentId, hostelId, roomId, bedId }) {
-        const [student, hostel, room, bed] = await Promise.all([
-            Student.findById(studentId),
-            Hostel.findById(hostelId),
-            Room.findById(roomId),
-            Bed.findById(bedId),
-        ]);
+    async allocateRoom(data) {
+        const [student, hostel, room, bed] =
+            await Promise.all([
+                Student.findById(data.studentId),
+                this.repository.findHostelById(data.hostelId),
+                this.repository.findRoomById(data.roomId),
+                this.repository.findBedById(data.bedId),
+            ]);
 
-        if (!student) throw new AppError('Student not found', 404);
-        if (!hostel) throw new AppError('Hostel not found', 404);
-        if (!room) throw new AppError('Room not found', 404);
-        if (!bed) throw new AppError('Bed not found', 404);
-
-        // 🚫 Gender validation
-        if (!HostelUtils.canAllocateStudent(student, hostel)) {
-            throw new AppError('Student not allowed in this hostel', 400);
+        if (!student) {
+            throw new AppError('Student not found', 404);
         }
 
-        // 🚫 Already allocated
-        const existing = await RoomAllocation.findOne({
-            student: studentId,
-            status: 'active',
-        });
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        if (!room) {
+            throw new AppError('Room not found', 404);
+        }
+
+        if (!bed) {
+            throw new AppError('Bed not found', 404);
+        }
+
+        // Validate gender
+        if (
+            !HostelUtils.canAllocateStudent(
+                student,
+                hostel
+            )
+        ) {
+            throw new AppError(
+                'Student gender does not match hostel type',
+                400
+            );
+        }
+
+        // Existing allocation
+        const existing =
+            await this.repository.findActiveAllocationByStudent(
+                data.studentId
+            );
 
         if (existing) {
-            throw new AppError('Student already has an active room', 400);
+            throw new AppError(
+                'Student already has an active room allocation',
+                400
+            );
         }
 
-        // 🚫 Room capacity check
+        // Room capacity
         if (!HostelUtils.hasRoomCapacity(room)) {
             throw new AppError('Room is full', 400);
         }
 
-        // 🚫 Bed availability
+        // Bed availability
         if (!HostelUtils.isBedAvailable(bed)) {
-            throw new AppError('Bed is already occupied', 400);
+            throw new AppError(
+                'Bed is already occupied',
+                400
+            );
         }
 
-        // ✅ Create allocation
-        const allocationData = HostelUtils.prepareAllocationData({
-            student,
-            hostel,
-            room,
-            bed,
-        });
+        // Room maintenance
+        if (room.status === 'maintenance') {
+            throw new AppError(
+                'Room is under maintenance',
+                400
+            );
+        }
 
-        const allocation = await RoomAllocation.create(allocationData);
+        // Prepare allocation
+        const allocationData =
+            HostelUtils.prepareAllocationData({
+                student,
+                hostel,
+                room,
+                bed,
+            });
 
-        // ✅ Update bed + room
-        bed.isOccupied = true;
-        await bed.save();
+        const allocation =
+            await this.repository.createAllocation(
+                allocationData
+            );
 
-        room.occupiedBeds += 1;
-        await room.save();
+        // Update bed
+        await this.repository.updateBed(
+            bed._id.toString(),
+            {
+                isOccupied: true,
+            }
+        );
+
+        // Update room occupancy
+        await this.repository.updateRoom(
+            room._id.toString(),
+            {
+                occupiedBeds: room.occupiedBeds + 1,
+            }
+        );
 
         return allocation;
     }
@@ -159,48 +425,90 @@ export class HostelService {
     // VACATE ROOM
     // ─────────────────────────────────────────────
     async vacateRoom(studentId) {
-        const allocation = await RoomAllocation.findOne({
-            student: studentId,
-            status: 'active',
-        });
+        const allocation =
+            await this.repository.findActiveAllocationByStudent(
+                studentId
+            );
 
         if (!allocation) {
-            throw new AppError('No active allocation found', 404);
+            throw new AppError(
+                'No active allocation found',
+                404
+            );
         }
 
         const [bed, room] = await Promise.all([
-            Bed.findById(allocation.bed),
-            Room.findById(allocation.room),
+            this.repository.findBedById(
+                allocation.bed.toString()
+            ),
+
+            this.repository.findRoomById(
+                allocation.room.toString()
+            ),
         ]);
 
-        // update allocation
-        allocation.status = 'completed';
-        allocation.toDate = new Date();
-        await allocation.save();
+        // Update allocation
+        await this.repository.updateAllocation(
+            allocation._id.toString(),
+            {
+                status: 'completed',
+                toDate: new Date(),
+            }
+        );
 
-        // free bed
+        // Free bed
         if (bed) {
-            bed.isOccupied = false;
-            await bed.save();
+            await this.repository.updateBed(
+                bed._id.toString(),
+                {
+                    isOccupied: false,
+                }
+            );
         }
 
-        // decrease room occupancy
+        // Decrease occupancy
         if (room && room.occupiedBeds > 0) {
-            room.occupiedBeds -= 1;
-            await room.save();
+            await this.repository.updateRoom(
+                room._id.toString(),
+                {
+                    occupiedBeds:
+                        room.occupiedBeds - 1,
+                }
+            );
         }
 
         return allocation;
     }
 
-    // ─────────────────────────────────────────────
-    // SHIFT ROOM (ADVANCED 🔥)
-    // ─────────────────────────────────────────────
-    async shiftRoom({ studentId, newRoomId, newBedId, newHostelId }) {
-        // Step 1: vacate current
+    // ═══════════════════════════════════════════════
+    // ROOM SHIFT
+    // ═══════════════════════════════════════════════
+
+    async shiftRoom(data) {
+        const {
+            studentId,
+            newRoomId,
+            newBedId,
+            newHostelId,
+        } = data;
+
+        // Check existing allocation
+        const existingAllocation =
+            await this.repository.findActiveAllocationByStudent(
+                studentId
+            );
+
+        if (!existingAllocation) {
+            throw new AppError(
+                'Student does not have any active room allocation',
+                404
+            );
+        }
+
+        // Vacate current room
         await this.vacateRoom(studentId);
 
-        // Step 2: allocate new
+        // Allocate new room
         return await this.allocateRoom({
             studentId,
             hostelId: newHostelId,

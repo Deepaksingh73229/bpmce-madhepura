@@ -80,6 +80,12 @@ router.post(
     asyncHandler(controller.createFloor)
 );
 
+router.get(
+    '/:hostelId/floors',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getFloorsByHostel)
+);
+
 router.patch(
     '/floors/:id',
     rbacMiddleware(['hostel.manage']),
@@ -98,31 +104,23 @@ router.post(
     asyncHandler(controller.createRoom)
 );
 
+router.get(
+    '/:hostelId/rooms',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getRoomsByHostel)
+);
+
+router.get(
+    '/:hostelId/rooms/status/:status',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getRoomsByStatus)
+);
+
 router.patch(
     '/rooms/:id',
     rbacMiddleware(['hostel.manage']),
     validate(updateRoomSchema),
     asyncHandler(controller.updateRoom)
-);
-
-router.get(
-    '/rooms',
-    rbacMiddleware(['hostel.manage']),
-    validate(queryRoomSchema),
-    asyncHandler(async (req, res) => {
-        const result = await controller.service.getRooms(req.query);
-
-        return res.status(200).json({
-            success: true,
-            data: result.rooms,
-            pagination: {
-                total: result.total,
-                page: result.page,
-                limit: result.limit,
-                totalPages: Math.ceil(result.total / result.limit),
-            },
-        });
-    })
 );
 
 // ─────────────────────────────────────────────
@@ -134,6 +132,26 @@ router.post(
     rbacMiddleware(['hostel.manage']),
     validate(createBedSchema),
     asyncHandler(controller.createBed)
+);
+
+// ═══════════════════════════════════════════════
+// STAFF ROUTES
+// ═══════════════════════════════════════════════
+
+router.get(
+    '/:hostelId/staff',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getStaffByHostel)
+);
+
+// ═══════════════════════════════════════════════
+// STUDENT ROUTES
+// ═══════════════════════════════════════════════
+
+router.get(
+    '/:hostelId/students',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getStudentsByHostel)
 );
 
 // ─────────────────────────────────────────────

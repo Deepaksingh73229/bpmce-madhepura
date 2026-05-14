@@ -5,35 +5,44 @@ const roomSchema = new Schema(
         hostel: {
             type: Schema.Types.ObjectId,
             ref: 'Hostel',
-            required: true,
+            required: [true, 'Hostel reference is required'],
         },
 
         floor: {
             type: Schema.Types.ObjectId,
             ref: 'Floor',
-            required: true,
+            required: [true, 'Floor reference is required'],
         },
 
         roomNumber: {
             type: String,
-            required: true,
+            required: [true, 'Room number is required'],
             trim: true,
         },
 
         type: {
             type: String,
             enum: ['single', 'triple'],
-            required: true,
+            required: [true, 'Room type is required'],
         },
 
         capacity: {
             type: Number,
-            required: true, // 1 or 3
+            required: [true, 'Capacity is required'],
+            min: [1, 'Capacity must be at least 1'],
         },
 
         occupiedBeds: {
             type: Number,
             default: 0,
+            min: 0,
+        },
+
+        status: {
+            type: String,
+            enum: ['vacant', 'occupied', 'maintenance', 'full'],
+            default: 'vacant',
+            required: true,
         },
 
         isActive: {
@@ -46,5 +55,28 @@ const roomSchema = new Schema(
 
 // Unique room per floor
 roomSchema.index({ floor: 1, roomNumber: 1 }, { unique: true });
+roomSchema.index({ hostel: 1 });
+roomSchema.index({ status: 1 });
+roomSchema.index({ isActive: 1 });
+
+// Auto-update room status based on occupancy
+roomSchema.pre('save', function (next) {
+    if (this.status === 'maintenance') {
+        next();
+        return;
+    }
+
+    if (this.occupiedBeds === 0) {
+        this.status = 'vacant';
+    }
+    else if (this.occupiedBeds >= this.capacity) {
+        this.status = 'full';
+    }
+    else {
+        this.status = 'occupied';
+    }
+
+    next();
+});
 
 export const Room = mongoose.model('Room', roomSchema);

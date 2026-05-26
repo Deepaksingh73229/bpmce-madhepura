@@ -10,21 +10,6 @@ export const createHostelSchema = z.object({
         hostelType: z.enum(['male', 'female'], {
             errorMap: () => ({ message: 'Hostel type must be male or female' }),
         }),
-
-        // address: z.string().optional(),
-
-        // totalFloors: z.number().int().positive(),
-
-        // capacity: z.number().int().positive(),
-
-        staff: z
-            .array(
-                z.object({
-                    user: z.string().min(1),
-                    role: z.string().min(1),
-                })
-            )
-            .optional(),
     }),
 });
 

@@ -111,6 +111,12 @@ router.get(
 );
 
 router.get(
+    '/:hostelId/floors/:floorNumber',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getFloorByNumber)
+);
+
+router.get(
     '/:hostelId/rooms/status/:status',
     rbacMiddleware(['hostel.manage']),
     asyncHandler(controller.getRoomsByStatus)
@@ -137,6 +143,12 @@ router.post(
 // ═══════════════════════════════════════════════
 // STAFF ROUTES
 // ═══════════════════════════════════════════════
+
+router.post(
+    '/:hostelId',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.createStaffByHostel)
+);
 
 router.get(
     '/:hostelId/staff',

@@ -53,16 +53,15 @@ const roomSchema = new Schema(
     { timestamps: true }
 );
 
-// Unique room per floor
-roomSchema.index({ floor: 1, roomNumber: 1 }, { unique: true });
+// Unique room per hostel
+roomSchema.index({ hostel: 1, roomNumber: 1 }, { unique: true });
 roomSchema.index({ hostel: 1 });
 roomSchema.index({ status: 1 });
 roomSchema.index({ isActive: 1 });
 
 // Auto-update room status based on occupancy
-roomSchema.pre('save', function (next) {
+roomSchema.pre('save', function () {
     if (this.status === 'maintenance') {
-        next();
         return;
     }
 
@@ -75,8 +74,6 @@ roomSchema.pre('save', function (next) {
     else {
         this.status = 'occupied';
     }
-
-    next();
 });
 
 export const Room = mongoose.model('Room', roomSchema);

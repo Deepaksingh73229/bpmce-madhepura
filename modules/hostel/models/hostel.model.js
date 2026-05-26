@@ -4,6 +4,7 @@ const hostelSchema = new Schema(
     {
         name: {
             type: String,
+            unique: true,
             required: [true, 'Hostel name is required'],
             trim: true,
         },
@@ -14,29 +15,12 @@ const hostelSchema = new Schema(
             required: [true, 'Hostel type is required'],
         },
 
-        totalFloors: {
-            type: Number,
-            required: [true, 'Total floors is required'],
-            min: [1, 'Total floors must be at least 1'],
-        },
-
-        capacity: {
-            type: Number,
-            required: [true, 'Capacity is required'],
-            min: [1, 'Capacity must be at least 1'],
-        },
-
         // staff mapping (warden, superintendent)
+        // Only store reference to the user. Role information is stored on the User model.
         staff: [
             {
-                user: {
-                    type: Schema.Types.ObjectId,
-                    ref: 'User',
-                },
-
-                role: {
-                    type: String, // warden, superintendent
-                },
+                type: Schema.Types.ObjectId,
+                ref: 'User',
             },
         ],
 

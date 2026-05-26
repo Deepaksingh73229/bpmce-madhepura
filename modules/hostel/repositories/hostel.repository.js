@@ -3,6 +3,9 @@ import { Floor } from '../models/floor.model.js';
 import { Room } from '../models/room.model.js';
 import { Bed } from '../models/bed.model.js';
 import { RoomAllocation } from '../models/roomAllocation.model.js';
+import mongoose from 'mongoose';
+import { User } from '../../../models/user.model.js';
+import { Role } from '../../../models/role.model.js';
 
 export class HostelRepository {
     // ─────────────────────────────────────────────
@@ -13,12 +16,13 @@ export class HostelRepository {
     }
 
     async findHostelById(id) {
-        return await Hostel.findById(id).populate('staff.user', 'name email phone roles');
+        return await Hostel.findById(id)
+            .populate('staff.user', 'name email phone');
     }
 
     async findAllHostels(filters, skip, limit) {
         return await Hostel.find(filters)
-            .populate('staff.user', 'name email phone roles')
+            .populate('staff', 'name email phone')
             .skip(skip)
             .limit(limit)
             .sort({ createdAt: -1 });
@@ -32,7 +36,8 @@ export class HostelRepository {
         return await Hostel.findByIdAndUpdate(id, data, {
             new: true,
             runValidators: true,
-        }).populate('staff.user', 'name email phone roles');
+        })
+            .populate('staff.user', 'name email phone');
     }
 
     async softDeleteHostel(id) {
@@ -54,6 +59,22 @@ export class HostelRepository {
         return await Floor.findById(id).populate('hostel', 'name hostelType');
     }
 
+    async findFloorByNumber(data) {
+        return await Floor.findOne({
+            hostel: data.hostel,
+            floorNumber: data.floorNumber,
+            isActive: true,
+        }).populate('hostel', 'name hostelType');
+    }
+
+    async findFloorByName(hostelId, name) {
+        return await Floor.findOne({
+            hostel: hostelId,
+            name,
+            isActive: true,
+        }).populate('hostel', 'name hostelType');
+    }
+
     async findFloorsByHostel(hostelId, filters) {
         const query = { hostel: hostelId, ...filters };
         return await Floor.find(query).sort({ floorNumber: 1 });
@@ -67,7 +88,10 @@ export class HostelRepository {
     }
 
     async countFloorsByHostel(hostelId) {
-        return await Floor.countDocuments({ hostel: hostelId });
+        return await Floor.countDocuments({
+            hostel: hostelId,
+            isActive: true,
+        });
     }
 
     // ─────────────────────────────────────────────
@@ -94,6 +118,7 @@ export class HostelRepository {
 
     async findRoomsByHostel(hostelId, filters) {
         const query = { hostel: hostelId, ...filters };
+
         return await Room.find(query)
             .populate('floor', 'floorNumber name')
             .sort({ roomNumber: 1 });
@@ -107,6 +132,19 @@ export class HostelRepository {
 
     async countRooms(filters) {
         return await Room.countDocuments(filters);
+    }
+
+    async countRoomsByHostel(hostelId) {
+        return await Room.countDocuments({ hostel: hostelId, isActive: true });
+    }
+
+    async sumRoomCapacityByHostel(hostelId) {
+        const result = await Room.aggregate([
+            { $match: { hostel: new mongoose.Types.ObjectId(hostelId), isActive: true } },
+            { $group: { _id: null, total: { $sum: '$capacity' } } },
+        ]);
+
+        return (result[0] && result[0].total) ? result[0].total : 0;
     }
 
     async updateRoom(id, data) {
@@ -134,7 +172,10 @@ export class HostelRepository {
     }
 
     async updateBed(id, data) {
-        return await Bed.findByIdAndUpdate(id, data, { new: true });
+        return await Bed.findByIdAndUpdate(id, data, {
+            new: true,
+            runValidators: true
+        });
     }
 
     // ─────────────────────────────────────────────
@@ -199,4 +240,26 @@ export class HostelRepository {
             status: 'active',
         });
     }
+
+    // Staff
+    async createStaffByHostel(hostelId, data) {
+        const staffRole = await Role.findOne({ name: data.role });
+
+        const newStaff = await User.create({
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            password: data.password,
+            roles: [staffRole._id],
+        });
+
+        await Hostel.findByIdAndUpdate(hostelId, {
+            $push: {
+                staff: newStaff._id
+            },
+        });
+
+        return newStaff;
+    }
 }
+

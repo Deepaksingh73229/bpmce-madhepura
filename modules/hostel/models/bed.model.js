@@ -22,6 +22,6 @@ const bedSchema = new Schema(
 );
 
 // Unique bed inside a room
-bedSchema.index({ room: 1, bedNumber: 1 }, { unique: true });
+bedSchema.index({ hostel: 1, bedNumber: 1 }, { unique: true });
 
 export const Bed = mongoose.model('Bed', bedSchema);

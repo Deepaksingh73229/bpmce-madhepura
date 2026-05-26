@@ -36,8 +36,25 @@ export class HostelService {
             this.repository.countHostels(filters),
         ]);
 
+        const hostelsWithTotals = await Promise.all(
+            hostels.map(async (hostel) => {
+                const [totalFloors, totalRooms, totalCapacity] = await Promise.all([
+                    this.repository.countFloorsByHostel(hostel._id),
+                    this.repository.countRoomsByHostel(hostel._id),
+                    this.repository.sumRoomCapacityByHostel(hostel._id),
+                ]);
+
+                return {
+                    ...hostel.toObject(),
+                    totalFloors,
+                    totalRooms,
+                    totalCapacity,
+                };
+            })
+        );
+
         return {
-            hostels,
+            hostels: hostelsWithTotals,
             total,
             page: query.page || 1,
             limit
@@ -52,11 +69,23 @@ export class HostelService {
         }
 
         return hostel;
-    }
+        // Check duplicate by floor number
+        if (typeof data.floorNumber !== 'undefined' && data.floorNumber !== null) {
+            const floorByNumber = await this.repository.findFloorByNumber(data);
+            if (floorByNumber) {
+                throw new AppError('Floor number already exists for this hostel', 400);
+            }
+        }
 
-    async updateHostel(id, data) {
-        const hostel = await this.repository.updateHostel(id, data);
+        // Check duplicate by name (if provided)
+        if (data.name) {
+            const floorByName = await this.repository.findFloorByName(data.hostel, data.name);
+            if (floorByName) {
+                throw new AppError('Floor name already exists for this hostel', 400);
+            }
+        }
 
+        return await this.repository.createFloor(data);
         if (!hostel) {
             throw new AppError('Hostel not found', 404);
         }
@@ -86,7 +115,31 @@ export class HostelService {
             throw new AppError('Hostel not found', 404);
         }
 
+        const floor = await this.repository.findFloorByNumber(data);
+
+        if (floor) {
+            throw new AppError('Floor already exist!', 404)
+        }
+
         return await this.repository.createFloor(data);
+    }
+
+    async getFloorByNumber(hostelId, floorNumber) {
+        const hostel = await this.repository.findHostelById(
+            hostelId
+        );
+
+        if (!hostel) {
+            throw new AppError('Hostel not found', 404);
+        }
+
+        const floor = await this.repository.findFloorByNumber(hostelId, floorNumber);
+
+        if (!floor) {
+            throw new AppError('Floor not found', 404);
+        }
+
+        return floor;
     }
 
     async getFloorsByHostel(hostelId, query) {
@@ -107,6 +160,16 @@ export class HostelService {
                 hostelId,
                 query.batch
             );
+        }
+
+        // If floorNumber query is provided, return that specific floor
+        if (typeof query.floorNumber !== 'undefined') {
+            return await this.repository.findFloorByNumber({ hostel: hostelId, floorNumber: Number(query.floorNumber) });
+        }
+
+        // If name query is provided, return that specific floor
+        if (query.name) {
+            return await this.repository.findFloorByName(hostelId, query.name);
         }
 
         return await this.repository.findFloorsByHostel(
@@ -221,9 +284,29 @@ export class HostelService {
         return await this.repository.createBed(data);
     }
 
+    async updateBed(id, data) {
+        const bed = await this.repository.updateBed(id, data);
+
+        if (!bed) {
+            throw new AppError('Bed not found', 404);
+        }
+
+        return bed;
+    }
+
     // ═══════════════════════════════════════════════
     // STAFF DETAILS
     // ═══════════════════════════════════════════════
+    async createStaffByHostel(hostelId, data){
+        const hostel = await this.repository.findHostelById(hostelId);
+
+        if(!hostel){
+            throw new AppError('Hostel not found', 404)
+        }
+
+        return await this.repository.createStaffByHostel(hostelId, data);
+    }
+
     async getStaffByHostel(query) {
         const hostel = await this.repository.findHostelById(
             query.hostelId

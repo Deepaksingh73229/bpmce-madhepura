@@ -56,6 +56,22 @@ export class HostelController {
         return ApiResponse.success(res, floor, 'Floor created successfully', 201);
     };
 
+    getFloorByNumber = async (req, res) => {
+        const { hostelId, floorNumber } = req.params;
+
+        const floor =
+            await this.service.getFloorByNumber(
+                hostelId,
+                floorNumber
+            );
+
+        return ApiResponse.success(
+            res,
+            floor,
+            'Floor retrieved successfully'
+        );
+    };
+
     getFloorsByHostel = async (req, res) => {
         const { hostelId } = req.params;
 
@@ -131,9 +147,23 @@ export class HostelController {
         return ApiResponse.success(res, bed, 'Bed created successfully', 201);
     };
 
+    updateBed = async (req, res) => {
+        const { id } = req.params;
+        const bed = await this.service.updateBed(id, req.body);
+
+        return ApiResponse.success(res, bed, 'Bed updated successfully');
+    };
+
     // ═══════════════════════════════════════════════
     // STAFF BY HOSTEL
     // ═══════════════════════════════════════════════
+    createStaffByHostel = async (req, res) => {
+        const { hostelId } = req.params;
+        const staff = await this.service.createStaffByHostel(hostelId, req.body);
+        
+        return ApiResponse.success(res, staff, 'Staff created successfully', 201);
+    }
+
     getStaffByHostel = async (req, res) => {
         const { hostelId } = req.params;
 

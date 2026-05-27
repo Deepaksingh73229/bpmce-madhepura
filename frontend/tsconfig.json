@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+, "services/api/auth.api.js", "services/api/hostel.api.js", "services/api/student.api.js", "lib/api-client.js", "services/hooks/use-auth.js", "services/hooks/use-hostel.js", "services/hooks/use-student.js", "store/auth.store.js", "lib/utils.js", "components/auth/login-form.jsx", "components/dashboard/dashboard-overview.jsx", "components/campus/hostel/hostel-explorer.jsx", "components/campus/floor/floor-form-dialog.jsx", "components/campus/hostel/hostel-form-dialog.jsx", "components/campus/hostel/hostels-grid.jsx"  ],
+  "exclude": ["node_modules"]
+}

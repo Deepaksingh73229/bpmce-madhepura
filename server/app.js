@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import { connect } from './config/db.config.js';
 
 import studentRoutes from './modules/student/routes/student.routes.js';
 import userRoutes from './modules/user/routes/user.routes.js';
@@ -9,6 +10,9 @@ import hostelRoutes from './modules/hostel/routes/hostel.routes.js';
 import { errorHandler } from './middlewares/error.middleware.js';
 
 const app = express();
+
+// Initialize DB Connection (Important for serverless handlers)
+connect().catch((err) => console.error('❌ Early DB Connection Error:', err.message));
 
 // Middlewares
 app.use(cors());

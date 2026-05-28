@@ -7,10 +7,11 @@ dotenv.config();
 // CONNECTION OPTIONS
 // ─────────────────────────────────────────────
 const MONGO_OPTIONS = {
-    maxPoolSize: 10,
-    minPoolSize: 2,
-    socketTimeoutMS: 45000,
-    serverSelectionTimeoutMS: 5000,
+    maxPoolSize: 50, // Increased for serverless concurrency
+    minPoolSize: 0,   // Better for serverless cold starts
+    socketTimeoutMS: 30000,
+    serverSelectionTimeoutMS: 8000, // Fail faster than Vercel's 10s limit
+    connectTimeoutMS: 10000,
     heartbeatFrequencyMS: 10000,
     retryWrites: true,
     retryReads: true,
@@ -24,11 +25,14 @@ const RETRY_DELAY_MS = 3000;
 
 let retryCount = 0;
 let isConnected = false;
+let isEventsRegistered = false;
 
 // ─────────────────────────────────────────────
 // CONNECTION EVENTS
 // ─────────────────────────────────────────────
 const registerEvents = () => {
+    if (isEventsRegistered) return;
+
     mongoose.connection.on('connected', () => {
         isConnected = true;
         retryCount = 0;
@@ -53,6 +57,8 @@ const registerEvents = () => {
         isConnected = false;
         console.log('🔒 MongoDB connection closed');
     });
+
+    isEventsRegistered = true;
 };
 
 // ─────────────────────────────────────────────
@@ -156,6 +162,11 @@ export const getDbStatus = () => {
 // MAIN CONNECT FUNCTION
 // ─────────────────────────────────────────────
 export const connect = async () => {
+    // Check if already connected or connecting
+    if (mongoose.connection.readyState === 1 || mongoose.connection.readyState === 2) {
+        return mongoose.connection;
+    }
+
     registerEvents();
     gracefulShutdown('SIGINT');
     gracefulShutdown('SIGTERM');

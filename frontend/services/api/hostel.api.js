@@ -91,6 +91,11 @@ export const studentApi = {
 };
 
 export const allocationApi = {
+    getAll: (filters) => {
+        const qs = buildQueryString(filters || {});
+        return get(`/hostels/allocations${qs ? `?${qs}` : ""}`);
+    },
+
     allocate: (payload) =>
         post("/hostels/allocate", payload),
 

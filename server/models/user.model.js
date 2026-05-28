@@ -23,7 +23,7 @@ const userSchema = new Schema(
         phone: {
             type: String,
             trim: true,
-            required: [true, 'Phone is reuired']
+            required: [true, 'Phone is required']
         },
 
         password: {

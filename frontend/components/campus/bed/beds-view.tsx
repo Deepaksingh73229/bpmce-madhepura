@@ -41,6 +41,7 @@ export function BedsView({ hostel, floor, room, beds = [], isLoading = false, on
         room: room._id,
         bedNumber: `B${i + 1}`,
         isOccupied: i < room.occupiedBeds,
+        isActive: true,
         createdAt: "",
         updatedAt: "",
         student: null,

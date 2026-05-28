@@ -139,6 +139,19 @@ export class HostelController {
         return ApiResponse.success(res, room, 'Room updated successfully');
     };
 
+    getAllRooms = async (req, res) => {
+        const result = await this.service.getAllRooms(req.query);
+
+        return ApiResponse.paginated(
+            res,
+            result.rooms,
+            result.total,
+            result.page,
+            result.limit,
+            'Rooms retrieved successfully'
+        );
+    };
+
     // ─────────────────────────────────────────────
     // BED
     // ─────────────────────────────────────────────
@@ -207,6 +220,19 @@ export class HostelController {
     allocateRoom = async (req, res) => {
         const allocation = await this.service.allocateRoom(req.body);
         return ApiResponse.success(res, allocation, 'Room allocated successfully');
+    };
+
+    getAllAllocations = async (req, res) => {
+        const result = await this.service.getAllAllocations(req.query);
+
+        return ApiResponse.paginated(
+            res,
+            result.allocations,
+            result.total,
+            result.page,
+            result.limit,
+            'Allocations retrieved successfully'
+        );
     };
 
     vacateRoom = async (req, res) => {

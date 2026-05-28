@@ -41,6 +41,7 @@ export function useHostel(id) {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useCreateHostel() {
     const qc = useQueryClient();
 
@@ -61,6 +62,7 @@ export function useCreateHostel() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { id: string, payload: any }>} */
 export function useUpdateHostel() {
     const qc = useQueryClient();
 
@@ -82,6 +84,7 @@ export function useUpdateHostel() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, string>} */
 export function useDeleteHostel() {
     const qc = useQueryClient();
 
@@ -103,6 +106,7 @@ export function useDeleteHostel() {
 }
 
 // ── Floors ────────────────────────────────────────────────
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useCreateFloor() {
     const qc = useQueryClient();
 
@@ -126,6 +130,7 @@ export function useCreateFloor() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { id: string, payload: any }>} */
 export function useUpdateFloor() {
     const qc = useQueryClient();
 
@@ -150,6 +155,7 @@ export function useUpdateFloor() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, string>} */
 export function useDeleteFloor() {
     const qc = useQueryClient();
 
@@ -229,6 +235,7 @@ export function useRooms(filters) {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useCreateRoom() {
     const qc = useQueryClient();
 
@@ -249,6 +256,7 @@ export function useCreateRoom() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { id: string, payload: any }>} */
 export function useUpdateRoom() {
     const qc = useQueryClient();
 
@@ -271,6 +279,7 @@ export function useUpdateRoom() {
 }
 
 // ── Beds ──────────────────────────────────────────────────
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useCreateBed() {
     const qc = useQueryClient();
 
@@ -291,6 +300,7 @@ export function useCreateBed() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { id: string, payload: any }>} */
 export function useUpdateBed() {
     const qc = useQueryClient();
 
@@ -313,6 +323,15 @@ export function useUpdateBed() {
 }
 
 // ── Allocations ───────────────────────────────────────────
+export function useAllocations(filters) {
+    return useQuery({
+        queryKey: ["allocations", filters],
+        queryFn: () => allocationApi.getAll(filters),
+        staleTime: 60 * 1000,
+    });
+}
+
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useAllocateRoom() {
     const qc = useQueryClient();
 
@@ -337,6 +356,9 @@ export function useAllocateRoom() {
     });
 }
 
+/**
+ * @returns {import('@tanstack/react-query').UseMutationResult<any, any, { studentId: string }>}
+ */
 export function useVacateRoom() {
     const qc = useQueryClient();
 
@@ -361,6 +383,7 @@ export function useVacateRoom() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useShiftRoom() {
     const qc = useQueryClient();
 
@@ -399,6 +422,7 @@ export function useStaffByHostel(hostelId, role) {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useCreateStaff() {
     const qc = useQueryClient();
 
@@ -419,6 +443,7 @@ export function useCreateStaff() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { hostelId: string } & any>} */
 export function useCreateStaffByHostel() {
     const qc = useQueryClient();
 
@@ -440,6 +465,7 @@ export function useCreateStaffByHostel() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { id: string, payload: any }>} */
 export function useUpdateStaff() {
     const qc = useQueryClient();
 
@@ -461,6 +487,7 @@ export function useUpdateStaff() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, string>} */
 export function useDeleteStaff() {
     const qc = useQueryClient();
 

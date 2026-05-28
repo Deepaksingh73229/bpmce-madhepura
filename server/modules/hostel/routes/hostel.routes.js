@@ -47,6 +47,21 @@ router.get(
     asyncHandler(controller.getAllHostels)
 );
 
+// Get All Rooms
+router.get(
+    '/rooms',
+    rbacMiddleware(['hostel.manage']),
+    validate(queryRoomSchema),
+    asyncHandler(controller.getAllRooms)
+);
+
+// Get All Allocations
+router.get(
+    '/allocations',
+    rbacMiddleware(['hostel.manage']),
+    asyncHandler(controller.getAllAllocations)
+);
+
 // Get Hostel by ID
 router.get(
     '/:id',

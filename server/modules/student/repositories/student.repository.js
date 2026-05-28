@@ -23,7 +23,7 @@ export class StudentRepository {
 
     async update(id, data) {
         return await Student.findByIdAndUpdate(id, data, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         });
     }
@@ -32,7 +32,7 @@ export class StudentRepository {
         return await Student.findByIdAndUpdate(
             id,
             { isActive: false },
-            { new: true }
+            { returnDocument: 'after' }
         );
     }
 

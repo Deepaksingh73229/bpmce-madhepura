@@ -1,8 +1,4 @@
-// import { Hostel } from '../models/hostel.model.js';
-// import { Floor } from '../models/floor.model.js';
-// import { Room } from '../models/room.model.js';
-// import { Bed } from '../models/bed.model.js';
-// import { RoomAllocation } from '../models/roomAllocation.model.js';
+import { RoomAllocation } from '../models/roomAllocation.model.js';
 
 import { User } from '../../../models/user.model.js';
 import { Student } from '../../../models/student.model.js';
@@ -246,6 +242,40 @@ export class HostelService {
         );
     }
 
+    async getAllRooms(query) {
+        const filters = {};
+        if (query.hostelId) {
+            filters.hostel = query.hostelId;
+        }
+        if (query.type) {
+            filters.type = query.type;
+        }
+        if (query.status) {
+            filters.status = query.status;
+        }
+        if (query.availableOnly === 'true' || query.availableOnly === true) {
+            filters.$expr = {
+                $lt: ['$occupiedBeds', '$capacity'],
+            };
+        }
+
+        const page = parseInt(query.page || '1', 10);
+        const limit = parseInt(query.limit || '15', 10);
+        const skip = (page - 1) * limit;
+
+        const [rooms, total] = await Promise.all([
+            this.repository.findRooms(filters, skip, limit),
+            this.repository.countRooms(filters),
+        ]);
+
+        return {
+            rooms,
+            total,
+            page,
+            limit,
+        };
+    }
+
     async updateRoom(id, data) {
         const room = await this.repository.updateRoom(id, data);
 
@@ -393,6 +423,41 @@ export class HostelService {
             fromDate: alloc.fromDate,
             allocationId: alloc._id,
         }));
+    }
+
+    async getAllAllocations(query) {
+        const filters = {};
+        if (query.status) {
+            filters.status = query.status;
+        } else {
+            filters.status = 'active'; // Default to active allocations
+        }
+        if (query.hostelId) {
+            filters.hostel = query.hostelId;
+        }
+
+        const page = parseInt(query.page || '1', 10);
+        const limit = parseInt(query.limit || '15', 10);
+        const skip = (page - 1) * limit;
+
+        const [allocations, total] = await Promise.all([
+            RoomAllocation.find(filters)
+                .populate('student', 'name email rollNumber batchYear gender phone')
+                .populate('hostel', 'name hostelType')
+                .populate('room', 'roomNumber type')
+                .populate('bed', 'bedNumber')
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 }),
+            RoomAllocation.countDocuments(filters),
+        ]);
+
+        return {
+            allocations,
+            total,
+            page,
+            limit,
+        };
     }
 
 

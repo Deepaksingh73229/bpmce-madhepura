@@ -86,6 +86,7 @@ const seedUsers = async (roles) => {
     const adminUser = await User.create({
         name: 'Super Admin',
         email: 'admin@college.com',
+        phone: '9876543210',
         password: 'Admin@123',
         roles: [roles.admin._id],
     });
@@ -93,6 +94,7 @@ const seedUsers = async (roles) => {
     const superintendentUser = await User.create({
         name: 'Hostel Superintendent',
         email: 'superintendent@college.com',
+        phone: '9876543211',
         password: 'Super@123',
         roles: [roles.hostelSuperintendent._id],
     });
@@ -100,6 +102,7 @@ const seedUsers = async (roles) => {
     const studentUser = await User.create({
         name: 'Deepak Kumar',
         email: 'student@college.com',
+        phone: '9876543212',
         password: 'Student@123',
         roles: [roles.student._id],
     });

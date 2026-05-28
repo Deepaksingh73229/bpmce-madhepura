@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Room, RoomFilters } from "@/types";
+import type { Room, RoomFilters, Hostel } from "@/types";
 
 export function RoomList() {
   const [filters, setFilters] = useState<RoomFilters>({ page: 1, limit: 15 });
@@ -66,7 +66,7 @@ export function RoomList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Hostels</SelectItem>
-            {hostels.map((h) => (
+            {hostels.map((h: Hostel) => (
               <SelectItem key={h._id} value={h._id}>{h.name}</SelectItem>
             ))}
           </SelectContent>
@@ -131,7 +131,7 @@ export function RoomList() {
                   </td>
                 </tr>
               ) : (
-                rooms.map((room) => {
+                rooms.map((room: Room) => {
                   const pct = getOccupancyPercent(room.occupiedBeds, room.capacity);
                   const hostel = typeof room.hostel === "object" ? room.hostel : null;
                   const floor = typeof room.floor === "object" ? room.floor : null;

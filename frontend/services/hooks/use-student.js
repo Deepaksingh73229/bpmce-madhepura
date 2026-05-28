@@ -34,6 +34,7 @@ export function useStudentProfile(id) {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, any>} */
 export function useCreateStudent() {
     const qc = useQueryClient();
 
@@ -55,6 +56,7 @@ export function useCreateStudent() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, { id: string, payload: any }>} */
 export function useUpdateStudent() {
     const qc = useQueryClient();
 
@@ -76,6 +78,7 @@ export function useUpdateStudent() {
     });
 }
 
+/** @returns {import('@tanstack/react-query').UseMutationResult<any, any, string>} */
 export function useDeleteStudent() {
     const qc = useQueryClient();
 

@@ -25,7 +25,7 @@ export class UserRepository {
 
     async update(id, data) {
         return await User.findByIdAndUpdate(id, data, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         }).populate('roles');
     }
@@ -34,7 +34,7 @@ export class UserRepository {
         return await User.findByIdAndUpdate(
             id,
             { isActive: false },
-            { new: true }
+            { returnDocument: 'after' }
         );
     }
 
@@ -46,7 +46,7 @@ export class UserRepository {
         return await User.findByIdAndUpdate(
             userId,
             { roles: roleIds },
-            { new: true }
+            { returnDocument: 'after' }
         ).populate('roles');
     }
 

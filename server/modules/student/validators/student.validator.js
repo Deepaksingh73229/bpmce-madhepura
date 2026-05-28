@@ -11,7 +11,10 @@ export const createStudentSchema = z.object({
         branch: z.string().optional(),
         batchYear: z.number().int().positive().optional(),
         gender: z.enum(['Male', 'Female', 'Other']).optional(),
-        dateOfBirth: z.coerce.date().optional(),
+        dateOfBirth: z.coerce.date({
+            required_error: "Date of birth is required",
+            invalid_type_error: "Invalid date",
+        }),
         address: z.string().optional(),
     }),
 });

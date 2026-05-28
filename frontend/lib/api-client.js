@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "@/store/auth.store";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
 
@@ -65,12 +66,12 @@ apiClient.interceptors.response.use(
                     return apiClient(originalRequest);
                 } 
                 catch {
-                    localStorage.removeItem("accessToken");
-                    localStorage.removeItem("refreshToken");
+                    useAuthStore.getState().clearAuth();
                     window.location.href = "/login";
                 }
             } 
             else {
+                useAuthStore.getState().clearAuth();
                 window.location.href = "/login";
             }
         }
@@ -103,6 +104,7 @@ export async function del(url) {
 export function getErrorMessage(error) {
     if (axios.isAxiosError(error)) {
         return (
+            error.response?.data?.error ||
             error.response?.data?.message ||
             error.message ||
             "Something went wrong"

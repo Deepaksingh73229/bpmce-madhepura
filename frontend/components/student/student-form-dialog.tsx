@@ -10,15 +10,17 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCreateStudent, useUpdateStudent } from "@/services/hooks/use-student";
 import type { Student } from "@/types";
+import { toast } from "sonner";
 
 const schema = z.object({
     name: z.string().min(1, "Name is required").trim(),
     email: z.string().email("Invalid email address").trim(),
     rollNumber: z.string().min(1, "Roll number is required").trim(),
-    registrationNumber: z.string().optional().or(z.literal("")),
+    registrationNumber: z.string().min(1, "Registration number is required").trim(),
     course: z.string().min(1, "Course is required").trim(),
     branch: z.string().min(1, "Branch is required").trim(),
     batchYear: z.coerce.number().min(2000, "Invalid batch year").max(2100, "Invalid batch year"),
+    dateOfBirth: z.string().optional(),
 });
 
 type StudentFormValues = z.infer<typeof schema>;
@@ -53,6 +55,7 @@ export function StudentFormDialog({ open, onClose, student }: { open: boolean, o
                 course: student.course,
                 branch: student.branch,
                 batchYear: student.batchYear,
+                dateOfBirth: student.dateOfBirth ? new Date(student.dateOfBirth).toISOString().split('T')[0] : "",
             });
         } else {
             reset({
@@ -63,6 +66,7 @@ export function StudentFormDialog({ open, onClose, student }: { open: boolean, o
                 course: "B.Tech",
                 branch: "",
                 batchYear: new Date().getFullYear(),
+                dateOfBirth: "",
             });
         }
     }, [student, reset]);
@@ -70,8 +74,15 @@ export function StudentFormDialog({ open, onClose, student }: { open: boolean, o
     const onSubmit = async (values: any) => {
         try {
             if (isEdit) {
+                if (values.dateOfBirth === "") {
+                    delete values.dateOfBirth;
+                }
                 await update({ id: student?._id, payload: values });
             } else {
+                if (!values.dateOfBirth) {
+                    toast.error("Date of Birth is required");
+                    return;
+                }
                 await create(values);
             }
             onClose();
@@ -150,6 +161,15 @@ export function StudentFormDialog({ open, onClose, student }: { open: boolean, o
                             error={errors.batchYear?.message} 
                             {...register("batchYear")} 
                         />
+                        {!isEdit && (
+                            <Input 
+                                label="Date of Birth" 
+                                type="date" 
+                                required 
+                                error={errors.dateOfBirth?.message} 
+                                {...register("dateOfBirth")} 
+                            />
+                        )}
                     </div>
 
                     <DialogFooter className="pt-2">

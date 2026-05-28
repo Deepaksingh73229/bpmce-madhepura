@@ -89,13 +89,11 @@ const studentSchema = new Schema(
     }
 );
 
-studentSchema.pre('save', async function (next) {
+studentSchema.pre('validate', async function () {
     // only run on user creation
     if(this.isNew){
-        if(!this.rollNumber && !this.dateOfBirth){
-            return next(
-                new Error('Roll No and DOB are required!')
-            )
+        if(!this.rollNumber || !this.dateOfBirth){
+            throw new Error('Roll No and DOB are required!');
         }
 
         // parse dob
@@ -107,10 +105,8 @@ studentSchema.pre('save', async function (next) {
 
         const formattedDOB = `${day}${month}${year}`;
 
-        this.password = `${this.rollNumber}@${formattedDOB}`
+        this.password = `${this.rollNumber}@${formattedDOB}`;
     }
-
-    next()
 })
 
 // Indexes for performance

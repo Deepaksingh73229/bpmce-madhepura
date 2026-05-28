@@ -34,7 +34,7 @@ export class HostelRepository {
 
     async updateHostel(id, data) {
         return await Hostel.findByIdAndUpdate(id, data, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true,
         })
             .populate('staff.user', 'name email phone');
@@ -44,7 +44,7 @@ export class HostelRepository {
         return await Hostel.findByIdAndUpdate(
             id,
             { isActive: false },
-            { new: true }
+            { returnDocument: 'after' }
         );
     }
 
@@ -82,7 +82,7 @@ export class HostelRepository {
 
     async updateFloor(id, data) {
         return await Floor.findByIdAndUpdate(id, data, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         });
     }
@@ -150,7 +150,7 @@ export class HostelRepository {
     async updateRoom(id, data) {
         return await Room.findByIdAndUpdate(id, data,
             {
-                new: true,
+                returnDocument: 'after',
                 runValidators: true,
             }
         );
@@ -173,7 +173,7 @@ export class HostelRepository {
 
     async updateBed(id, data) {
         return await Bed.findByIdAndUpdate(id, data, {
-            new: true,
+            returnDocument: 'after',
             runValidators: true
         });
     }
@@ -219,7 +219,7 @@ export class HostelRepository {
 
     async updateAllocation(id, data) {
         return await RoomAllocation.findByIdAndUpdate(id, data, {
-            new: true,
+            returnDocument: 'after',
         });
     }
 
